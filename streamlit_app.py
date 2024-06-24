@@ -1,40 +1,49 @@
-import altair as alt
-import numpy as np
-import pandas as pd
 import streamlit as st
 
 """
-# Welcome to Streamlit!
+# Welcome to my TDEE calculator!
 
-Edit `/streamlit_app.py` to customize this app to your heart's desire :heart:.
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
-
-In the meantime, below is an example of what you can do with just a few lines of code:
 """
 
-num_points = st.slider("Number of points in spiral", 1, 10000, 1100)
-num_turns = st.slider("Number of turns in spiral", 1, 300, 31)
+def tdee(sex, weight, height, age, activity_level):
+    if activity_level == "sedentary":
+        activity = 1.2
+    elif activity_level == "lightly active":
+        activity = 1.375
+    elif activity_level == "moderately active":
+        activity = 1.55
+    elif activity_level == "very active":
+        activity = 1.725
+    elif activity_level == "extremely active":
+        activity = 1.9
+    else:
+        return "Invalid activity level"
 
-indices = np.linspace(0, 1, num_points)
-theta = 2 * np.pi * num_turns * indices
-radius = indices
+    if sex == "male":
+        bmr = (6.23762 * weight) + (12.7084 * height) - (6.755 * age) + 66.473
+    elif sex == "female":
+        bmr = (4.33789 * weight) + (4.69798 * height) - (4.6756 * age) + 655.0955
+    else:
+        return "Invalid sex"
 
-x = radius * np.cos(theta)
-y = radius * np.sin(theta)
+    tdee_result = bmr * activity
+    return round(tdee_result)
 
-df = pd.DataFrame({
-    "x": x,
-    "y": y,
-    "idx": indices,
-    "rand": np.random.randn(num_points),
-})
+# Streamlit user inputs
+st.sidebar.header('User Input Parameters')
 
-st.altair_chart(alt.Chart(df, height=700, width=700)
-    .mark_point(filled=True)
-    .encode(
-        x=alt.X("x", axis=None),
-        y=alt.Y("y", axis=None),
-        color=alt.Color("idx", legend=None, scale=alt.Scale()),
-        size=alt.Size("rand", legend=None, scale=alt.Scale(range=[1, 150])),
-    ))
+sex = st.sidebar.selectbox('Sex', ('male', 'female'))
+weight = st.sidebar.number_input('Weight (lbs)', min_value=0, value=150)
+height = st.sidebar.number_input('Height (inches)', min_value=0, value=65)
+age = st.sidebar.number_input('Age', min_value=0, value=25)
+activity_level = st.sidebar.selectbox('Activity Level', 
+                                      ('sedentary', 'lightly active', 'moderately active', 'very active', 'extremely active'))
+
+# Calculate TDEE
+tdee_result = tdee(sex, weight, height, age, activity_level)
+
+# Display result
+if isinstance(tdee_result, str):
+    st.error(tdee_result)
+else:
+    st.success(f'You burn {tdee_result} calories per day.')
